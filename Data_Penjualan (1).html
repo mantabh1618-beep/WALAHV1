@@ -1,0 +1,2040 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Data Penjualan</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --navy: #1B3A5C;
+            --navy-dark: #122943;
+            --amber: #C68A2E;
+            --cream: #F7F5F0;
+            --row-alt: #EEF2F6;
+            --ink: #1F2937;
+            --muted: #6B7280;
+            --line: #D8DEE5;
+            --good: #1E7A46;
+            --warn: #B4491F;
+            --white: #FFFFFF;
+            --danger: #b91c1c;
+            --header-fg: #FFFFFF;
+            --header-sub: #C9D6E3;
+            --stat-bg: rgba(255, 255, 255, 0.08);
+            --stat-border: rgba(255, 255, 255, 0.18);
+            --stat-label: #B9C8D8;
+            --hover-row: #E4ECF3;
+            --modal-overlay: rgba(18, 41, 67, 0.55);
+            --danger-hover: #fee2e2;
+            --page-btn-bg: #fff;
+            --page-btn-border: #D8DEE5;
+            --page-active-bg: #1B3A5C;
+            --page-active-fg: #fff;
+        }
+        html.dark {
+            --navy: #243B55;
+            --navy-dark: #1a2d42;
+            --amber: #D4A04A;
+            --cream: #0f1720;
+            --row-alt: #1a2433;
+            --ink: #E5E7EB;
+            --muted: #9CA3AF;
+            --line: #2d3a4d;
+            --good: #34D399;
+            --warn: #F59E0B;
+            --white: #15202b;
+            --danger: #F87171;
+            --header-fg: #F3F4F6;
+            --header-sub: #A0AEC0;
+            --stat-bg: rgba(255, 255, 255, 0.06);
+            --stat-border: rgba(255, 255, 255, 0.12);
+            --stat-label: #A0AEC0;
+            --hover-row: #243447;
+            --modal-overlay: rgba(0, 0, 0, 0.65);
+            --danger-hover: #3f1f1f;
+            --page-btn-bg: #1a2433;
+            --page-btn-border: #2d3a4d;
+            --page-active-bg: #3B82F6;
+            --page-active-fg: #fff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--cream);
+            color: var(--ink);
+            transition: background 0.25s, color 0.25s;
+        }
+
+        header.app {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            background: linear-gradient(180deg, var(--navy) 0%, var(--navy-dark) 100%);
+            color: var(--header-fg);
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            width: 100%;
+        }
+        header.app h1 {
+            margin: 0;
+            font-size: 16px;
+            letter-spacing: 0.4px;
+            font-weight: 700;
+        }
+        header.app .sub {
+            font-size: 11px;
+            color: var(--header-sub);
+            margin-top: 1px;
+        }
+        .stats {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .stat-card {
+            background: var(--stat-bg);
+            border: 1px solid var(--stat-border);
+            border-radius: 6px;
+            padding: 4px 10px;
+            min-width: 95px;
+        }
+        .stat-card .label {
+            font-size: 9px;
+            color: var(--stat-label);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .stat-card .value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--header-fg);
+            margin-top: 0;
+        }
+        .theme-btn {
+            background: var(--stat-bg);
+            border: 1px solid var(--stat-border);
+            color: var(--header-fg);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            line-height: 1;
+            transition: background 0.2s;
+        }
+        .theme-btn:hover { background: rgba(255,255,255,0.15); }
+
+        main { padding: 0; width: 100%; }
+
+        .toolbar-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            background: var(--white);
+            border-bottom: 1px solid var(--line);
+            width: 100%;
+            flex-wrap: wrap;
+        }
+        .toolbar-bar .menus {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-left: auto;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .field label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--navy);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .field input,
+        .field select {
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            font-size: 13.5px;
+            font-family: inherit;
+            background: var(--white);
+            color: var(--ink);
+            width: 100%;
+        }
+        .field input:focus,
+        .field select:focus {
+            outline: 2px solid var(--amber);
+            outline-offset: 0;
+            border-color: var(--amber);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--navy);
+            background: var(--navy);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            font-family: inherit;
+        }
+        .btn:hover { background: var(--navy-dark); }
+        .btn.secondary {
+            background: var(--white);
+            color: var(--navy);
+        }
+        .btn.secondary:hover { background: var(--row-alt); }
+        .btn.danger {
+            background: var(--white);
+            color: var(--danger);
+            border-color: var(--danger);
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+        .btn.danger:hover { background: var(--danger-hover); }
+        .btn.sm {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--navy);
+            color: #fff;
+            border: 1px solid var(--navy);
+            padding: 5px 11px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .dropdown-toggle:hover { background: var(--navy-dark); }
+        .dropdown-toggle.filter-btn {
+            background: var(--white);
+            color: var(--navy);
+            border-color: var(--navy);
+        }
+        .dropdown-toggle.filter-btn:hover {
+            background: var(--row-alt);
+        }
+        .dropdown-toggle .caret {
+            font-size: 10px;
+            margin-left: 2px;
+            transition: transform 0.25s ease;
+        }
+        .dropdown-toggle.open .caret { transform: rotate(180deg); }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 230px;
+            background: var(--white);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+            padding: 6px 0;
+            display: none;
+            z-index: 99;
+            overflow: hidden;
+        }
+        .dropdown-menu.open {
+            display: block;
+            animation: dropFade 0.2s ease;
+        }
+        .dropdown-menu.filter-menu {
+            min-width: 300px;
+            padding: 14px 16px;
+            right: auto;
+            left: 0;
+        }
+        .filter-menu .field { margin-bottom: 12px; }
+        .filter-menu .field:last-of-type { margin-bottom: 10px; }
+        .filter-menu .filter-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .filter-menu .filter-actions .btn {
+            flex: 1;
+            text-align: center;
+            padding: 7px 10px;
+            font-size: 12.5px;
+        }
+        @keyframes dropFade {
+            0% { opacity: 0; transform: translateY(-6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 18px;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ink);
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.15s;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .dropdown-item:hover { background: var(--row-alt); }
+        .dropdown-item .icon {
+            font-size: 16px;
+            width: 22px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .dropdown-item.danger-red { color: var(--danger); }
+        .dropdown-item.danger-red:hover { background: var(--danger-hover); }
+        .dropdown-divider {
+            height: 1px;
+            background: var(--line);
+            margin: 4px 12px;
+        }
+        .dropdown-item input[type="file"] { display: none; }
+
+        .table-panel {
+            background: var(--white);
+            width: 100%;
+            border: none;
+            border-radius: 0;
+            overflow: hidden;
+        }
+        .table-wrap {
+            overflow: auto;
+            max-height: calc(100vh - 125px);
+            border: none;
+            border-radius: 0;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 1200px;
+        }
+        thead th {
+            position: sticky;
+            top: 0;
+            background: var(--navy);
+            color: #fff;
+            text-align: left;
+            padding: 8px 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            border-right: 1px solid rgba(255, 255, 255, 0.12);
+            white-space: nowrap;
+            z-index: 10;
+        }
+        tbody td {
+            padding: 5px 8px;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+            color: var(--ink);
+        }
+        tbody tr:nth-child(even) { background: var(--row-alt); }
+        tbody tr:hover { background: var(--hover-row); }
+        td.num, th.num { text-align: right; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge.cash { background: #E4F3EA; color: var(--good); }
+        html.dark .badge.cash { background: rgba(52, 211, 153, 0.15); }
+        .badge.tempo { background: #FBEDE0; color: var(--warn); }
+        html.dark .badge.tempo { background: rgba(245, 158, 11, 0.15); }
+
+        .empty-msg {
+            padding: 40px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+        }
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 2px 10px;
+            background: var(--white);
+            border-top: 1px solid var(--line);
+            min-height: 0;
+            line-height: 1.2;
+        }
+        .pagination-info {
+            font-size: 11px;
+            color: var(--muted);
+        }
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            flex-wrap: wrap;
+        }
+        .page-btn {
+            min-width: 22px;
+            height: 22px;
+            padding: 0 5px;
+            border: 1px solid var(--page-btn-border);
+            background: var(--page-btn-bg);
+            color: var(--ink);
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.15s, border-color 0.15s;
+            line-height: 1;
+        }
+        .page-btn:hover:not(:disabled):not(.active) {
+            background: var(--row-alt);
+        }
+        .page-btn.active {
+            background: var(--page-active-bg);
+            color: var(--page-active-fg);
+            border-color: var(--page-active-bg);
+            font-weight: 700;
+        }
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .page-size {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+        .page-size select {
+            padding: 0 4px;
+            border: 1px solid var(--page-btn-border);
+            border-radius: 4px;
+            background: var(--page-btn-bg);
+            color: var(--ink);
+            font-size: 11px;
+            font-family: inherit;
+            height: 22px;
+        }
+
+        /* ===== MODAL OVERLAY ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--modal-overlay);
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        .modal-overlay.show { display: flex; }
+
+        /* ===== FAKTUR MODAL ===== */
+        #addModal .box {
+            background: var(--white);
+            color: var(--ink);
+            border-radius: 10px;
+            padding: 0;
+            width: 720px;
+            max-width: 96vw;
+            max-height: 92vh;
+            overflow: auto;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+        }
+        .faktur-box {
+            padding: 18px 22px 16px;
+        }
+        .faktur-top {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 560px) {
+            .faktur-top { grid-template-columns: 1fr; }
+        }
+        .faktur-company {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--navy);
+        }
+        .faktur-addr {
+            font-size: 11.5px;
+            color: var(--muted);
+            line-height: 1.45;
+            margin-top: 2px;
+        }
+        .faktur-title {
+            text-align: center;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--navy);
+            margin: 8px 0 14px;
+            border-bottom: 2px solid var(--navy);
+            padding-bottom: 6px;
+        }
+        .faktur-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 16px;
+            margin-bottom: 12px;
+        }
+        @media (max-width: 560px) {
+            .faktur-meta { grid-template-columns: 1fr; }
+        }
+        .faktur-meta .row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .faktur-meta .row label {
+            min-width: 88px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: none;
+            letter-spacing: 0;
+            flex-shrink: 0;
+        }
+        .faktur-meta .row input,
+        .faktur-meta .row select {
+            flex: 1;
+            padding: 6px 9px;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            font-size: 13px;
+            font-family: inherit;
+            background: var(--white);
+            color: var(--ink);
+        }
+        .faktur-meta .row input:focus,
+        .faktur-meta .row select:focus {
+            outline: 2px solid var(--amber);
+            border-color: var(--amber);
+        }
+        .bayar-badge {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-align: center;
+            min-width: 90px;
+        }
+        .bayar-tempo {
+            background: #FBEDE0;
+            color: var(--warn);
+            border: 1px solid rgba(180, 73, 31, 0.3);
+        }
+        html.dark .bayar-tempo {
+            background: rgba(245, 158, 11, 0.15);
+        }
+        .bayar-cash {
+            background: #E4F3EA;
+            color: var(--good);
+            border: 1px solid rgba(30, 122, 70, 0.3);
+        }
+        html.dark .bayar-cash {
+            background: rgba(52, 211, 153, 0.15);
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+            margin: 8px 0 6px;
+        }
+        .items-table th {
+            background: var(--navy);
+            color: #fff;
+            padding: 7px 6px;
+            text-align: left;
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border: 1px solid var(--navy-dark);
+        }
+        .items-table td {
+            padding: 4px 5px;
+            border: 1px solid var(--line);
+            vertical-align: middle;
+        }
+        .items-table input {
+            width: 100%;
+            padding: 5px 6px;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            font-size: 12.5px;
+            font-family: inherit;
+            background: transparent;
+            color: var(--ink);
+        }
+        .items-table input:focus {
+            outline: none;
+            border-color: var(--amber);
+            background: var(--white);
+        }
+        .items-table .col-no { width: 32px; text-align: center; }
+        .items-table .col-kode { width: 88px; }
+        .items-table .col-qty { width: 72px; }
+        .items-table .col-harga { width: 95px; }
+        .items-table .col-disc { width: 60px; }
+        .items-table .col-jml { width: 100px; text-align: right; font-weight: 600; }
+        .items-table .col-act { width: 32px; text-align: center; }
+        .items-table .total-row td {
+            font-weight: 700;
+            background: var(--row-alt);
+        }
+        .items-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 12px 22px 16px;
+            border-top: 1px solid var(--line);
+        }
+
+        /* ===== DOWNLOAD MODAL ===== */
+        #downloadModal .box {
+            background: var(--white);
+            color: var(--ink);
+            border-radius: 10px;
+            padding: 20px 22px;
+            width: 380px;
+            max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+        }
+        #downloadModal h2 {
+            margin: 0 0 14px;
+            color: var(--navy);
+            font-size: 16px;
+        }
+        .dl-opts {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .dl-opts label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .dl-opts input[type="radio"] {
+            accent-color: var(--navy);
+            width: 16px;
+            height: 16px;
+        }
+        .dl-month-wrap {
+            margin-left: 26px;
+            margin-top: 2px;
+        }
+        .dl-month-wrap select {
+            padding: 7px 10px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            background: var(--white);
+            color: var(--ink);
+            width: 100%;
+        }
+
+        @media (max-width: 720px) {
+            header.app { padding: 12px; }
+            .toolbar-bar { padding: 5px 8px; }
+            .dropdown-menu.filter-menu {
+                left: 0;
+                right: 0;
+                min-width: unset;
+                width: calc(100vw - 20px);
+            }
+            .dropdown-menu { right: 0; left: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="app">
+        <div>
+            <h1>BANK DATA PENJUALAN</h1>
+            <div class="sub" id="rangeLabel">Tidak ada data.</div>
+        </div>
+        <div class="stats">
+            <div class="stat-card"><div class="label">Transaksi</div><div class="value" id="statCount">0</div></div>
+            <div class="stat-card"><div class="label">Total Omzet</div><div class="value" id="statOmzet">Rp 0</div></div>
+            <div class="stat-card"><div class="label">Rata2 / Transaksi</div><div class="value" id="statAvg">Rp 0</div></div>
+            <a href="Ringkasan_Bank_Data_Penjualan.html" class="theme-btn" title="Buka Ringkasan" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">📊 Ringkasan</a>
+            <button type="button" class="theme-btn" id="themeToggle" title="Mode terang / gelap">🌙</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="toolbar-bar">
+            <div class="dropdown" id="filterDropdown">
+                <button class="dropdown-toggle filter-btn" id="filterToggle">
+                    <span>🔍 Filter</span>
+                    <span class="caret">▼</span>
+                </button>
+                <div class="dropdown-menu filter-menu" id="filterMenu">
+                    <div class="field">
+                        <label>No Faktur / Nama Toko</label>
+                        <input type="text" id="fFaktur" placeholder="cth: 01100326… atau TOKO WIWIN">
+                    </div>
+                    <div class="field">
+                        <label>Produk</label>
+                        <select id="fProduk">
+                            <option value="">Semua Produk</option>
+                            <option value="fitri">Fitri</option>
+                            <option value="rupa">Rupa-rupa (selain Fitri)</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Sales</label>
+                        <select id="fSales"><option value="">Semua Sales</option></select>
+                    </div>
+                    <div class="field">
+                        <label>Bulan / Tahun</label>
+                        <select id="fBulan"><option value="">Semua Periode</option></select>
+                    </div>
+                    <div class="field">
+                        <label>Pembayaran</label>
+                        <select id="fPembayaran">
+                            <option value="">Semua (Cash/Tempo)</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Tempo">Tempo</option>
+                        </select>
+                    </div>
+                    <div class="filter-actions">
+                        <button class="btn secondary" id="btnReset">⟳ Reset</button>
+                        <button class="btn" id="btnApplyFilter">Terapkan</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menus">
+                <div class="dropdown" id="actionDropdown">
+                    <button class="dropdown-toggle" id="dropdownToggle">
+                        <span>⚙️ Aksi</span>
+                        <span class="caret">▼</span>
+                    </button>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <button class="dropdown-item" id="btnAdd">
+                            <span class="icon">➕</span> Tambah Transaksi
+                        </button>
+                        <label class="dropdown-item" id="importLabel" style="cursor:pointer;">
+                            <span class="icon">📂</span> Import Excel Baru
+                            <input type="file" id="fileImport" accept=".xlsx,.xls">
+                        </label>
+                        <button class="dropdown-item" id="btnExport">
+                            <span class="icon">📥</span> Download Data (Excel)
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item danger-red" id="btnHapusTampilan">
+                            <span class="icon">🧹</span> Hapus Data Tampilan
+                        </button>
+                        <button class="dropdown-item danger-red" id="btnHapusSemua">
+                            <span class="icon">🗑️</span> Hapus Semua Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-panel">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>No.Faktur</th>
+                            <th>Produk</th>
+                            <th class="num">Jumlah</th>
+                            <th>Satuan</th>
+                            <th class="num">Harga Jual</th>
+                            <th class="num">Disc</th>
+                            <th class="num">Total</th>
+                            <th>Sales</th>
+                            <th>Customer</th>
+                            <th>Alamat</th>
+                            <th>Pembayaran</th>
+                            <th class="num">Harga Beli</th>
+                            <th style="text-align:center;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+            <div class="empty-msg" id="emptyMsg" style="display: block;">Tidak ada data yang cocok dengan filter.</div>
+            <div class="pagination" id="pagination">
+                <div class="pagination-info" id="pageInfo">Menampilkan 0 data</div>
+                <div class="pagination-controls" id="pageControls"></div>
+                <div class="page-size">
+                    <span>Per halaman</span>
+                    <select id="pageSize">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL: TAMBAH TRANSAKSI (bentuk Faktur) -->
+    <div class="modal-overlay" id="addModal">
+        <div class="box">
+            <div class="faktur-box">
+                <div class="faktur-top">
+                    <div>
+                        <div class="faktur-company">GAJAH MAS</div>
+                        <div class="faktur-addr">Candi RT 01 RW 01 Karanganyar<br>Telp. 0267 551519 HP. 085794898575</div>
+                    </div>
+                    <div>
+                        <div class="faktur-meta" style="grid-template-columns:1fr; gap:6px;">
+                            <div class="row">
+                                <label>No Faktur</label>
+                                <input type="text" id="nFaktur" placeholder="011003260700160">
+                            </div>
+                            <div class="row">
+                                <label>Tgl. Faktur</label>
+                                <input type="date" id="nTanggal">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faktur-title">Faktur Penjualan</div>
+
+                <div class="faktur-meta">
+                    <div class="row">
+                        <label>Customer</label>
+                        <input type="text" id="nCustomer" placeholder="TOKO WIWIN">
+                    </div>
+                    <div class="row">
+                        <label>Alamat</label>
+                        <input type="text" id="nAlamat" placeholder="PASAR MERGOSONO">
+                    </div>
+                    <div class="row">
+                        <label>Sales</label>
+                        <input type="text" id="nSales" placeholder="HARID / RAJU / HAFID">
+                    </div>
+                    <div class="row">
+                        <label>Jenis Bayar</label>
+                        <select id="nPembayaran">
+                            <option value="Tempo">Tempo</option>
+                            <option value="Cash">Cash</option>
+                        </select>
+                    </div>
+                    <div class="row" id="rowTglTempo">
+                        <label>Tgl. Tempo</label>
+                        <input type="date" id="nTglTempo">
+                    </div>
+                    <div class="row">
+                        <label>Status</label>
+                        <div id="bayarBadge" class="bayar-badge bayar-tempo">TEMPO</div>
+                    </div>
+                </div>
+
+                <table class="items-table" id="itemsTable">
+                    <thead>
+                        <tr>
+                            <th class="col-no">No</th>
+                            <th class="col-kode">Kode</th>
+                            <th>Nama Barang</th>
+                            <th class="col-qty">Qty</th>
+                            <th class="col-harga">Harga Satuan</th>
+                            <th class="col-disc">Disc.</th>
+                            <th class="col-jml">Jumlah</th>
+                            <th class="col-act"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsBody"></tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="3" style="text-align:right;">Total</td>
+                            <td class="col-no" id="fTotalQty">0</td>
+                            <td></td>
+                            <td></td>
+                            <td class="col-jml" id="fTotalJumlah">Rp 0</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div class="items-actions">
+                    <button type="button" class="btn secondary sm" id="btnAddItem">+ Tambah Baris</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" id="btnCancelAdd">Batal</button>
+                <button class="btn" id="btnSaveAdd">Simpan Transaksi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DOWNLOAD PILIH BULAN -->
+    <div class="modal-overlay" id="downloadModal">
+        <div class="box">
+            <h2>Download Data</h2>
+            <div class="dl-opts">
+                <label>
+                    <input type="radio" name="dlOpt" value="semua" checked>
+                    Semua data
+                </label>
+                <label>
+                    <input type="radio" name="dlOpt" value="bulan">
+                    Pilih bulan
+                </label>
+                <div class="dl-month-wrap" id="dlMonthWrap" style="display:none;">
+                    <select id="dlBulan"></select>
+                </div>
+                <label>
+                    <input type="radio" name="dlOpt" value="tampilan">
+                    Data yang sedang tampil (sesuai filter)
+                </label>
+            </div>
+            <div class="modal-footer" style="padding:16px 0 0; border:none;">
+                <button class="btn secondary" id="btnCancelDl">Batal</button>
+                <button class="btn" id="btnDoDownload">Download Excel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MONTH_ID = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober',
+            'November', 'Desember'
+        ];
+
+
+        const STORAGE_KEY = 'bank_data_penjualan_v2';
+
+        function saveDataToStorage() {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); } catch (e) {}
+        }
+        function loadDataFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length) return parsed;
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        // ===== DATA AWAL =====
+        let DATA_SEED = [{
+            "Tanggal": "2026-03-11",
+            "No.Faktur": "011001260300003",
+            "Produk": "SAMBAL STICK 9 GR",
+            "Jumlah": 1,
+            "Satuan": "KRT",
+            "Harga Jual": 72000.0,
+            "Disc": 0.0,
+            "Total": 72000.0,
+            "Sales": "RAJU",
+            "Customer": "TOKO HAMDAN",
+            "Alamat": "WONOSARI",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-25",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-11",
+            "No.Faktur": "011001260300003",
+            "Produk": "SAMBAL REFFIL 600ML",
+            "Jumlah": 24,
+            "Satuan": "KRT",
+            "Harga Jual": 43500.0,
+            "Disc": 0.0,
+            "Total": 1044000.0,
+            "Sales": "RAJU",
+            "Customer": "TOKO HAMDAN",
+            "Alamat": "WONOSARI",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-25",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-11",
+            "No.Faktur": "011001260300004",
+            "Produk": "BIHUN JAGUNG",
+            "Jumlah": 4,
+            "Satuan": "BAL",
+            "Harga Jual": 59000.0,
+            "Disc": 0.0,
+            "Total": 236000.0,
+            "Sales": "RAJU",
+            "Customer": "TOKO ROHANI",
+            "Alamat": "PASAR KUTO,",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-25",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-11",
+            "No.Faktur": "011001260300004",
+            "Produk": "KRUPUK B PUTIH PEDAS",
+            "Jumlah": 1,
+            "Satuan": "BAL",
+            "Harga Jual": 85000.0,
+            "Disc": 0.0,
+            "Total": 85000.0,
+            "Sales": "RAJU",
+            "Customer": "TOKO ROHANI",
+            "Alamat": "PASAR KUTO,",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-25",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-12",
+            "No.Faktur": "011001260300005",
+            "Produk": "KRUPUK B PUTIH PEDAS",
+            "Jumlah": 1,
+            "Satuan": "BAL",
+            "Harga Jual": 85000.0,
+            "Disc": 0.0,
+            "Total": 85000.0,
+            "Sales": "RAJU",
+            "Customer": "TOKO ROHANI",
+            "Alamat": "PASAR KUTO,",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-26",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-12",
+            "No.Faktur": "011001260300005",
+            "Produk": "BIHUN JAGUNG",
+            "Jumlah": 4,
+            "Satuan": "BAL",
+            "Harga Jual": 59000.0,
+            "Disc": 0.0,
+            "Total": 236000.0,
+            "Sales": "RAJU",
+            "Customer": "TOKO ROHANI",
+            "Alamat": "PASAR KUTO,",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-26",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-12",
+            "No.Faktur": "011001260300006",
+            "Produk": "KECAP GUNA JRG",
+            "Jumlah": 2,
+            "Satuan": "PCS",
+            "Harga Jual": 95000.0,
+            "Disc": 0.0,
+            "Total": 190000.0,
+            "Sales": "RAJU",
+            "Customer": "TOKO RANTI",
+            "Alamat": "PASAR PONCOWARNO",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-26",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-12",
+            "No.Faktur": "011001260300007",
+            "Produk": "SAMBAL CABE 500GR",
+            "Jumlah": 1,
+            "Satuan": "PCS",
+            "Harga Jual": 3250.0,
+            "Disc": 0.0,
+            "Total": 3250.0,
+            "Sales": "RAJU",
+            "Customer": "TOKO HAMDAN",
+            "Alamat": "WONOSARI",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-26",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-12",
+            "No.Faktur": "011001260300007",
+            "Produk": "SAMBAL REFFIL 600ML",
+            "Jumlah": 24,
+            "Satuan": "KRT",
+            "Harga Jual": 43500.0,
+            "Disc": 0.0,
+            "Total": 1044000.0,
+            "Sales": "RAJU",
+            "Customer": "TOKO HAMDAN",
+            "Alamat": "WONOSARI",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-26",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-12",
+            "No.Faktur": "011001260300008",
+            "Produk": "SHZ KIREI 85GR",
+            "Jumlah": 12,
+            "Satuan": "PCS",
+            "Harga Jual": 4400.0,
+            "Disc": 0.0,
+            "Total": 52800.0,
+            "Sales": "RAJU",
+            "Customer": "TOKO KOSIDAH",
+            "Alamat": "PASAR POCOWARNO",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-26",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-12",
+            "No.Faktur": "011001260300009",
+            "Produk": "SAMBAL REFFIL 600ML",
+            "Jumlah": 10,
+            "Satuan": "KRT",
+            "Harga Jual": 43500.0,
+            "Disc": 0.0,
+            "Total": 435000.0,
+            "Sales": "HAFID",
+            "Customer": "TOKO WARAS",
+            "Alamat": "KALITENGAH",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-26",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-13",
+            "No.Faktur": "011001260300011",
+            "Produk": "SAMBAL REFFIL 600ML",
+            "Jumlah": 7,
+            "Satuan": "KRT",
+            "Harga Jual": 43500.0,
+            "Disc": 0.0,
+            "Total": 304500.0,
+            "Sales": "LAINNYA",
+            "Customer": "TOKO POJOK",
+            "Alamat": "KARANGANYAR",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-27",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-13",
+            "No.Faktur": "011001260300012",
+            "Produk": "SAMBAL REFFIL 600ML",
+            "Jumlah": 5,
+            "Satuan": "KRT",
+            "Harga Jual": 43500.0,
+            "Disc": 0.0,
+            "Total": 217500.0,
+            "Sales": "JOSSY",
+            "Customer": "TOKO RATIH",
+            "Alamat": "PASAR KARANGANYAR",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-27",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-13",
+            "No.Faktur": "011003260300001",
+            "Produk": "SAMBAL STICK 9 GR",
+            "Jumlah": 100,
+            "Satuan": "PAK",
+            "Harga Jual": 3600.0,
+            "Disc": 0.0,
+            "Total": 360000.0,
+            "Sales": "HAFID",
+            "Customer": "SUMBER MAKMUR",
+            "Alamat": "BOGANGIN",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-27",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-13",
+            "No.Faktur": "011003260300001",
+            "Produk": "BIHUN JAGUNG",
+            "Jumlah": 5,
+            "Satuan": "BAL",
+            "Harga Jual": 59000.0,
+            "Disc": 0.0,
+            "Total": 295000.0,
+            "Sales": "HAFID",
+            "Customer": "SUMBER MAKMUR",
+            "Alamat": "BOGANGIN",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-27",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-13",
+            "No.Faktur": "011003260300001",
+            "Produk": "SOUN BAKSO GAJAH 2 KP",
+            "Jumlah": 2,
+            "Satuan": "BAL",
+            "Harga Jual": 69000.0,
+            "Disc": 0.0,
+            "Total": 138000.0,
+            "Sales": "HAFID",
+            "Customer": "SUMBER MAKMUR",
+            "Alamat": "BOGANGIN",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-27",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-13",
+            "No.Faktur": "011003260300001",
+            "Produk": "MIE IKAT KECIL",
+            "Jumlah": 50,
+            "Satuan": "IKT",
+            "Harga Jual": 21850.0,
+            "Disc": 0.0,
+            "Total": 1092500.0,
+            "Sales": "HAFID",
+            "Customer": "SUMBER MAKMUR",
+            "Alamat": "BOGANGIN",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-27",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-13",
+            "No.Faktur": "011003260300001",
+            "Produk": "KERUPUK BWG BIBIR RJW",
+            "Jumlah": 3,
+            "Satuan": "BAL",
+            "Harga Jual": 80000.0,
+            "Disc": 0.0,
+            "Total": 240000.0,
+            "Sales": "HAFID",
+            "Customer": "SUMBER MAKMUR",
+            "Alamat": "BOGANGIN",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-27",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-13",
+            "No.Faktur": "011003260300001",
+            "Produk": "KECAP NAS REFF 520ML",
+            "Jumlah": 3,
+            "Satuan": "PCS",
+            "Harga Jual": 15350.0,
+            "Disc": 0.0,
+            "Total": 46050.0,
+            "Sales": "HAFID",
+            "Customer": "SUMBER MAKMUR",
+            "Alamat": "BOGANGIN",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-27",
+            "Kode": ""
+        }, {
+            "Tanggal": "2026-03-13",
+            "No.Faktur": "011003260300001",
+            "Produk": "SAMBAL CABE 500GR",
+            "Jumlah": 7,
+            "Satuan": "PCS",
+            "Harga Jual": 3250.0,
+            "Disc": 0.0,
+            "Total": 22750.0,
+            "Sales": "HAFID",
+            "Customer": "SUMBER MAKMUR",
+            "Alamat": "BOGANGIN",
+            "Pembayaran": "Tempo",
+            "Harga Beli": 0,
+            "Tgl Tempo": "2026-03-27",
+            "Kode": ""
+        }];
+
+        let DATA = loadDataFromStorage();
+        if (!DATA) {
+            DATA = DATA_SEED.slice();
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); } catch (e) {}
+        }
+
+        // Master produk untuk autocomplete di form faktur
+        const MASTER_PRODUK = [
+            { kode: '00100005', nama: 'FITRI BOTOL 200ML', harga: 115800 },
+            { kode: '00100003', nama: 'FITRI BOTOL 400ML', harga: 113600 },
+            { kode: '00100004', nama: 'FITRI BOTOL 800ML', harga: 215100 },
+            { kode: '00100010', nama: 'SAMBAL REFFIL 600ML', harga: 43500 },
+            { kode: '00100011', nama: 'MIE IKAT KECIL', harga: 21850 },
+            { kode: '00100012', nama: 'BIHUN JAGUNG', harga: 59000 },
+            { kode: '00100013', nama: 'SAMBAL STICK 9 GR', harga: 3600 },
+            { kode: '00100014', nama: 'KERUPUK BWG BIBIR RJW', harga: 80000 },
+            { kode: '00100015', nama: 'KRUPUK B PUTIH PEDAS', harga: 85000 },
+            { kode: '00100016', nama: 'KECAP GUNA JRG', harga: 95000 },
+            { kode: '00100017', nama: 'SAMBAL CABE 500GR', harga: 3250 },
+            { kode: '00100018', nama: 'SHZ KIREI 85GR', harga: 4400 },
+            { kode: '00100019', nama: 'SOUN BAKSO GAJAH 2 KP', harga: 69000 },
+            { kode: '00100020', nama: 'KECAP NAS REFF 520ML', harga: 15350 },
+        ];
+
+        // ===== UTILITY =====
+        function fmtRupiah(n) {
+            n = Math.round(n || 0);
+            return 'Rp ' + n.toLocaleString('id-ID');
+        }
+
+        function fmtTanggal(iso) {
+            if (!iso) return '';
+            const [y, m, d] = iso.split('-');
+            return d + '/' + m + '/' + y;
+        }
+
+        function periodKey(iso) {
+            return iso.slice(0, 7);
+        }
+
+        function periodLabel(key) {
+            const [y, m] = key.split('-');
+            return MONTH_ID[parseInt(m, 10)] + ' ' + y;
+        }
+
+        function isFitri(nama) {
+            return (nama || '').toUpperCase().includes('FITRI');
+        }
+
+        // ===== FILTER OPTIONS =====
+        function rebuildFilterOptions() {
+            const salesSet = new Set();
+            const periodSet = new Set();
+            DATA.forEach(r => {
+                if (r.Sales) salesSet.add(r.Sales);
+                periodSet.add(periodKey(r.Tanggal));
+            });
+            const fSales = document.getElementById('fSales');
+            const curSales = fSales.value;
+            fSales.innerHTML = '<option value="">Semua Sales</option>' +
+                Array.from(salesSet).sort().map(s => `<option value="${s}">${s}</option>`).join('');
+            fSales.value = curSales;
+
+            const fBulan = document.getElementById('fBulan');
+            const curBulan = fBulan.value;
+            fBulan.innerHTML = '<option value="">Semua Periode</option>' +
+                Array.from(periodSet).sort().map(k => `<option value="${k}">${periodLabel(k)}</option>`).join('');
+            fBulan.value = curBulan;
+
+            // Download bulan options
+            const dlBulan = document.getElementById('dlBulan');
+            const curDl = dlBulan.value;
+            dlBulan.innerHTML = Array.from(periodSet).sort().map(k =>
+                `<option value="${k}">${periodLabel(k)}</option>`
+            ).join('') || '<option value="">—</option>';
+            if (curDl) dlBulan.value = curDl;
+        }
+
+        function getFiltered() {
+            const q = document.getElementById('fFaktur').value.trim().toLowerCase();
+            const produk = document.getElementById('fProduk').value;
+            const sales = document.getElementById('fSales').value;
+            const bulan = document.getElementById('fBulan').value;
+            const pembayaran = document.getElementById('fPembayaran').value;
+            return DATA.filter(r => {
+                // Cari No Faktur ATAU Nama Toko (Customer)
+                if (q) {
+                    const hitFaktur = (r['No.Faktur'] || '').toLowerCase().includes(q);
+                    const hitToko = (r.Customer || '').toLowerCase().includes(q);
+                    if (!hitFaktur && !hitToko) return false;
+                }
+                // Filter produk Fitri / Rupa-rupa
+                if (produk === 'fitri' && !isFitri(r.Produk)) return false;
+                if (produk === 'rupa' && isFitri(r.Produk)) return false;
+                if (sales && r.Sales !== sales) return false;
+                if (bulan && periodKey(r.Tanggal) !== bulan) return false;
+                if (pembayaran && r.Pembayaran !== pembayaran) return false;
+                return true;
+            });
+        }
+
+        // ===== HAPUS PER BARIS =====
+        function hapusBaris(index) {
+            if (confirm('Yakin ingin menghapus baris ini?')) {
+                DATA.splice(index, 1);
+                saveDataToStorage();
+                rebuildFilterOptions();
+                render();
+            }
+        }
+
+        function hapusTampilan() {
+            const filtered = getFiltered();
+            if (filtered.length === 0) {
+                alert('Tidak ada data yang tampil untuk dihapus.');
+                return;
+            }
+            if (confirm(`Yakin ingin menghapus ${filtered.length} baris data yang tampil?`)) {
+                const indicesToRemove = filtered.map(r => DATA.indexOf(r)).sort((a, b) => b - a);
+                for (let idx of indicesToRemove) {
+                    DATA.splice(idx, 1);
+                }
+                saveDataToStorage();
+                rebuildFilterOptions();
+                render();
+                closeAllMenus();
+            }
+        }
+
+        function hapusSemua() {
+            if (DATA.length === 0) {
+                alert('Data sudah kosong.');
+                return;
+            }
+            if (confirm(`Yakin ingin menghapus SEMUA data (${DATA.length} baris)?`)) {
+                DATA = [];
+                saveDataToStorage();
+                rebuildFilterOptions();
+                render();
+                closeAllMenus();
+            }
+        }
+
+        // ===== PAGINATION =====
+        let currentPage = 1;
+        let pageSize = 20;
+
+        function getPageSize() {
+            return parseInt(document.getElementById('pageSize').value, 10) || 20;
+        }
+
+        function renderPagination(totalRows) {
+            const pageInfo = document.getElementById('pageInfo');
+            const controls = document.getElementById('pageControls');
+            pageSize = getPageSize();
+            const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            if (totalRows === 0) {
+                pageInfo.textContent = 'Menampilkan 0 data';
+                controls.innerHTML = '';
+                return;
+            }
+
+            const start = (currentPage - 1) * pageSize + 1;
+            const end = Math.min(currentPage * pageSize, totalRows);
+            pageInfo.textContent = `Menampilkan ${start}–${end} dari ${totalRows.toLocaleString('id-ID')} data`;
+
+            let html = '';
+            html += `<button type="button" class="page-btn" data-page="prev" ${currentPage <= 1 ? 'disabled' : ''}>‹</button>`;
+
+            let from = Math.max(1, currentPage - 2);
+            let to = Math.min(totalPages, from + 4);
+            from = Math.max(1, to - 4);
+
+            if (from > 1) {
+                html += `<button type="button" class="page-btn" data-page="1">1</button>`;
+                if (from > 2) html += `<span style="padding:0 4px;color:var(--muted);">…</span>`;
+            }
+            for (let p = from; p <= to; p++) {
+                html += `<button type="button" class="page-btn${p === currentPage ? ' active' : ''}" data-page="${p}">${p}</button>`;
+            }
+            if (to < totalPages) {
+                if (to < totalPages - 1) html += `<span style="padding:0 4px;color:var(--muted);">…</span>`;
+                html += `<button type="button" class="page-btn" data-page="${totalPages}">${totalPages}</button>`;
+            }
+
+            html += `<button type="button" class="page-btn" data-page="next" ${currentPage >= totalPages ? 'disabled' : ''}>›</button>`;
+            controls.innerHTML = html;
+
+            controls.querySelectorAll('.page-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const v = this.dataset.page;
+                    if (v === 'prev') currentPage = Math.max(1, currentPage - 1);
+                    else if (v === 'next') currentPage = Math.min(totalPages, currentPage + 1);
+                    else currentPage = parseInt(v, 10);
+                    render();
+                });
+            });
+        }
+
+        // ===== RENDER =====
+        function render() {
+            const rows = getFiltered();
+            const tbody = document.getElementById('tbody');
+            const emptyMsg = document.getElementById('emptyMsg');
+            pageSize = getPageSize();
+            const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            if (rows.length === 0) {
+                tbody.innerHTML = '';
+                emptyMsg.style.display = 'block';
+            } else {
+                emptyMsg.style.display = 'none';
+                const startIdx = (currentPage - 1) * pageSize;
+                const pageRows = rows.slice(startIdx, startIdx + pageSize);
+                tbody.innerHTML = pageRows.map((r) => {
+                    const originalIndex = DATA.indexOf(r);
+                    return `
+                <tr>
+                  <td>${fmtTanggal(r.Tanggal)}</td>
+                  <td>${r['No.Faktur']}</td>
+                  <td>${r.Produk}</td>
+                  <td class="num">${r.Jumlah}</td>
+                  <td>${r.Satuan}</td>
+                  <td class="num">${fmtRupiah(r['Harga Jual'])}</td>
+                  <td class="num">${fmtRupiah(r.Disc)}</td>
+                  <td class="num">${fmtRupiah(r.Total)}</td>
+                  <td>${r.Sales}</td>
+                  <td>${r.Customer}</td>
+                  <td>${r.Alamat}</td>
+                  <td><span class="badge ${r.Pembayaran==='Cash'?'cash':'tempo'}">${r.Pembayaran}</span></td>
+                  <td class="num">${fmtRupiah(r['Harga Beli'] || 0)}</td>
+                  <td style="text-align:center;">
+                    <button class="btn danger" data-index="${originalIndex}">🗑️</button>
+                  </td>
+                </tr>
+              `;
+                }).join('');
+
+                tbody.querySelectorAll('.btn.danger').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.index);
+                        hapusBaris(idx);
+                    });
+                });
+            }
+
+            renderPagination(rows.length);
+
+            const total = rows.reduce((a, r) => a + (r.Total || 0), 0);
+            document.getElementById('statCount').textContent = rows.length.toLocaleString('id-ID');
+            document.getElementById('statOmzet').textContent = fmtRupiah(total);
+            document.getElementById('statAvg').textContent = rows.length ? fmtRupiah(total / rows.length) : 'Rp 0';
+
+            if (DATA.length) {
+                const dates = DATA.map(r => r.Tanggal).sort();
+                document.getElementById('rangeLabel').textContent =
+                    `Periode data: ${fmtTanggal(dates[0])} — ${fmtTanggal(dates[dates.length-1])} · ${DATA.length.toLocaleString('id-ID')} baris total`;
+            } else {
+                document.getElementById('rangeLabel').textContent = 'Tidak ada data.';
+            }
+        }
+
+        // ===== DROPDOWN =====
+        const toggleBtn = document.getElementById('dropdownToggle');
+        const menu = document.getElementById('dropdownMenu');
+        const filterToggle = document.getElementById('filterToggle');
+        const filterMenu = document.getElementById('filterMenu');
+
+        function closeAllMenus() {
+            menu.classList.remove('open');
+            toggleBtn.classList.remove('open');
+            filterMenu.classList.remove('open');
+            filterToggle.classList.remove('open');
+        }
+
+        toggleBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const willOpen = !menu.classList.contains('open');
+            closeAllMenus();
+            if (willOpen) {
+                menu.classList.add('open');
+                toggleBtn.classList.add('open');
+            }
+        });
+
+        filterToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const willOpen = !filterMenu.classList.contains('open');
+            closeAllMenus();
+            if (willOpen) {
+                filterMenu.classList.add('open');
+                filterToggle.classList.add('open');
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                closeAllMenus();
+            }
+        });
+
+        filterMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // ===== FILTER EVENTS =====
+        function filterChanged() {
+            currentPage = 1;
+            render();
+        }
+        document.getElementById('fFaktur').addEventListener('input', filterChanged);
+        document.getElementById('fProduk').addEventListener('change', filterChanged);
+        document.getElementById('fSales').addEventListener('change', filterChanged);
+        document.getElementById('fBulan').addEventListener('change', filterChanged);
+        document.getElementById('fPembayaran').addEventListener('change', filterChanged);
+
+        document.getElementById('btnReset').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('fFaktur').value = '';
+            document.getElementById('fProduk').value = '';
+            document.getElementById('fSales').value = '';
+            document.getElementById('fBulan').value = '';
+            document.getElementById('fPembayaran').value = '';
+            currentPage = 1;
+            render();
+            closeAllMenus();
+        });
+
+        document.getElementById('btnApplyFilter').addEventListener('click', function(e) {
+            e.preventDefault();
+            currentPage = 1;
+            render();
+            closeAllMenus();
+        });
+
+        document.getElementById('pageSize').addEventListener('change', function() {
+            currentPage = 1;
+            render();
+        });
+
+        document.getElementById('btnHapusTampilan').addEventListener('click', function(e) {
+            e.preventDefault();
+            hapusTampilan();
+        });
+        document.getElementById('btnHapusSemua').addEventListener('click', function(e) {
+            e.preventDefault();
+            hapusSemua();
+        });
+
+        // ===== FAKTUR FORM (multi-item) =====
+        let itemRows = [];
+
+        function updateBayarUI() {
+            const jenis = document.getElementById('nPembayaran').value;
+            const badge = document.getElementById('bayarBadge');
+            const rowTempo = document.getElementById('rowTglTempo');
+            if (jenis === 'Cash') {
+                badge.textContent = 'CASH';
+                badge.className = 'bayar-badge bayar-cash';
+                rowTempo.style.display = 'none';
+            } else {
+                badge.textContent = 'TEMPO';
+                badge.className = 'bayar-badge bayar-tempo';
+                rowTempo.style.display = '';
+            }
+        }
+
+        function itemJumlah(it) {
+            return (Number(it.qty) || 0) * (Number(it.harga) || 0) - (Number(it.disc) || 0);
+        }
+
+        function renderItems() {
+            const tbody = document.getElementById('itemsBody');
+            tbody.innerHTML = itemRows.map((it, i) => `
+                <tr>
+                    <td class="col-no">${i + 1}</td>
+                    <td class="col-kode">
+                        <input type="text" value="${escAttr(it.kode)}" data-i="${i}" data-f="kode" list="listKode" placeholder="Kode">
+                    </td>
+                    <td>
+                        <input type="text" value="${escAttr(it.nama)}" data-i="${i}" data-f="nama" list="listNama" placeholder="Nama barang">
+                    </td>
+                    <td class="col-qty">
+                        <input type="number" min="0" step="1" value="${it.qty}" data-i="${i}" data-f="qty" style="width:42px;display:inline-block;">
+                        <input type="text" value="${escAttr(it.satuan || 'KRT')}" data-i="${i}" data-f="satuan" style="width:36px;display:inline-block;" placeholder="KRT">
+                    </td>
+                    <td class="col-harga">
+                        <input type="number" min="0" step="100" value="${it.harga}" data-i="${i}" data-f="harga">
+                    </td>
+                    <td class="col-disc">
+                        <input type="number" min="0" step="100" value="${it.disc || 0}" data-i="${i}" data-f="disc">
+                    </td>
+                    <td class="col-jml">${fmtRupiah(itemJumlah(it))}</td>
+                    <td class="col-act">
+                        <button type="button" class="btn danger sm" onclick="removeItem(${i})" ${itemRows.length <= 1 ? 'disabled' : ''} title="Hapus baris">&times;</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Datalist
+            let dlKode = document.getElementById('listKode');
+            let dlNama = document.getElementById('listNama');
+            if (!dlKode) {
+                dlKode = document.createElement('datalist');
+                dlKode.id = 'listKode';
+                document.body.appendChild(dlKode);
+            }
+            if (!dlNama) {
+                dlNama = document.createElement('datalist');
+                dlNama.id = 'listNama';
+                document.body.appendChild(dlNama);
+            }
+            dlKode.innerHTML = MASTER_PRODUK.map(p => `<option value="${p.kode}">`).join('');
+            dlNama.innerHTML = MASTER_PRODUK.map(p => `<option value="${p.nama}">`).join('');
+
+            tbody.querySelectorAll('input').forEach(inp => {
+                inp.addEventListener('input', onItemChange);
+                inp.addEventListener('change', onItemChange);
+            });
+
+            const totalQty = itemRows.reduce((s, it) => s + (Number(it.qty) || 0), 0);
+            const totalJml = itemRows.reduce((s, it) => s + itemJumlah(it), 0);
+            document.getElementById('fTotalQty').textContent = totalQty;
+            document.getElementById('fTotalJumlah').textContent = fmtRupiah(totalJml);
+        }
+
+        function escAttr(s) {
+            return String(s || '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function onItemChange(e) {
+            const inp = e.target;
+            const i = Number(inp.dataset.i);
+            const f = inp.dataset.f;
+            if (f === 'qty' || f === 'harga' || f === 'disc') {
+                itemRows[i][f] = Number(inp.value) || 0;
+            } else {
+                itemRows[i][f] = inp.value;
+            }
+            if (f === 'kode') {
+                const found = MASTER_PRODUK.find(p => p.kode === inp.value);
+                if (found) {
+                    itemRows[i].nama = found.nama;
+                    itemRows[i].harga = found.harga;
+                }
+            } else if (f === 'nama') {
+                const found = MASTER_PRODUK.find(p => p.nama === inp.value);
+                if (found) {
+                    itemRows[i].kode = found.kode;
+                    itemRows[i].harga = found.harga;
+                }
+            }
+            renderItems();
+            const next = document.querySelector(`#itemsBody input[data-i="${i}"][data-f="${f}"]`);
+            if (next) {
+                next.focus();
+                try { next.setSelectionRange(next.value.length, next.value.length); } catch (err) {}
+            }
+        }
+
+        window.removeItem = function(i) {
+            if (itemRows.length <= 1) return;
+            itemRows.splice(i, 1);
+            renderItems();
+        };
+
+        document.getElementById('btnAddItem').addEventListener('click', function() {
+            itemRows.push({ kode: '', nama: '', qty: 1, satuan: 'KRT', harga: 0, disc: 0 });
+            renderItems();
+        });
+
+        document.getElementById('nPembayaran').addEventListener('change', updateBayarUI);
+
+        // Open modal
+        document.getElementById('btnAdd').addEventListener('click', function(e) {
+            e.preventDefault();
+            const today = new Date().toISOString().slice(0, 10);
+            const tempo = new Date();
+            tempo.setDate(tempo.getDate() + 13);
+            document.getElementById('nTanggal').value = today;
+            document.getElementById('nTglTempo').value = tempo.toISOString().slice(0, 10);
+            document.getElementById('nFaktur').value = '';
+            document.getElementById('nCustomer').value = '';
+            document.getElementById('nAlamat').value = '';
+            document.getElementById('nSales').value = '';
+            document.getElementById('nPembayaran').value = 'Tempo';
+            itemRows = [
+                { kode: '', nama: '', qty: 1, satuan: 'KRT', harga: 0, disc: 0 }
+            ];
+            updateBayarUI();
+            renderItems();
+            document.getElementById('addModal').classList.add('show');
+            closeAllMenus();
+        });
+
+        document.getElementById('btnCancelAdd').addEventListener('click', function() {
+            document.getElementById('addModal').classList.remove('show');
+        });
+
+        document.getElementById('addModal').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('show');
+        });
+
+        document.getElementById('btnSaveAdd').addEventListener('click', function() {
+            const tanggal = document.getElementById('nTanggal').value;
+            const faktur = document.getElementById('nFaktur').value.trim();
+            const sales = document.getElementById('nSales').value.trim();
+            const customer = document.getElementById('nCustomer').value.trim();
+            const alamat = document.getElementById('nAlamat').value.trim();
+            const pembayaran = document.getElementById('nPembayaran').value;
+            const tglTempo = pembayaran === 'Tempo' ? document.getElementById('nTglTempo').value : '';
+
+            if (!tanggal || !faktur) {
+                alert('Tanggal dan No.Faktur wajib diisi.');
+                return;
+            }
+            if (!customer) {
+                alert('Customer / Nama Toko wajib diisi.');
+                return;
+            }
+            if (!sales) {
+                alert('Sales wajib diisi.');
+                return;
+            }
+            if (pembayaran === 'Tempo' && !tglTempo) {
+                alert('Tanggal Tempo wajib diisi untuk pembayaran Tempo.');
+                return;
+            }
+
+            const validItems = itemRows.filter(it => it.nama && Number(it.qty) > 0);
+            if (!validItems.length) {
+                alert('Minimal 1 baris barang dengan nama & qty.');
+                return;
+            }
+
+            validItems.forEach(it => {
+                const total = itemJumlah(it);
+                DATA.push({
+                    'Tanggal': tanggal,
+                    'No.Faktur': faktur,
+                    'Produk': it.nama,
+                    'Jumlah': Number(it.qty) || 0,
+                    'Satuan': it.satuan || 'KRT',
+                    'Harga Jual': Number(it.harga) || 0,
+                    'Disc': Number(it.disc) || 0,
+                    'Total': total,
+                    'Sales': sales,
+                    'Customer': customer,
+                    'Alamat': alamat,
+                    'Pembayaran': pembayaran,
+                    'Harga Beli': 0,
+                    'Tgl Tempo': tglTempo,
+                    'Kode': it.kode || ''
+                });
+            });
+
+            document.getElementById('addModal').classList.remove('show');
+            saveDataToStorage();
+            rebuildFilterOptions();
+            render();
+        });
+
+        // ===== DOWNLOAD MODAL =====
+        document.getElementById('btnExport').addEventListener('click', function(e) {
+            e.preventDefault();
+            rebuildFilterOptions();
+            document.querySelector('input[name="dlOpt"][value="semua"]').checked = true;
+            document.getElementById('dlMonthWrap').style.display = 'none';
+            document.getElementById('downloadModal').classList.add('show');
+            closeAllMenus();
+        });
+
+        document.getElementById('btnCancelDl').addEventListener('click', function() {
+            document.getElementById('downloadModal').classList.remove('show');
+        });
+
+        document.getElementById('downloadModal').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('show');
+        });
+
+        document.querySelectorAll('input[name="dlOpt"]').forEach(r => {
+            r.addEventListener('change', function() {
+                document.getElementById('dlMonthWrap').style.display =
+                    this.value === 'bulan' ? 'block' : 'none';
+            });
+        });
+
+        document.getElementById('btnDoDownload').addEventListener('click', function() {
+            const opt = document.querySelector('input[name="dlOpt"]:checked').value;
+            let exportRows;
+            let suffix;
+
+            if (opt === 'semua') {
+                exportRows = DATA;
+                suffix = 'semua';
+            } else if (opt === 'bulan') {
+                const bln = document.getElementById('dlBulan').value;
+                if (!bln) {
+                    alert('Pilih bulan terlebih dahulu.');
+                    return;
+                }
+                exportRows = DATA.filter(r => periodKey(r.Tanggal) === bln);
+                suffix = bln;
+            } else {
+                exportRows = getFiltered();
+                suffix = 'filter';
+            }
+
+            if (!exportRows.length) {
+                alert('Tidak ada data untuk diunduh.');
+                return;
+            }
+
+            const exportData = exportRows.map(r => ({
+                'Tanggal': r.Tanggal,
+                'No.Faktur': r['No.Faktur'],
+                'Produk': r.Produk,
+                'Jumlah': r.Jumlah,
+                'Satuan': r.Satuan,
+                'Harga Jual': r['Harga Jual'],
+                'Disc': r.Disc,
+                'Total': r.Total,
+                'Sales': r.Sales,
+                'Customer': r.Customer,
+                'Alamat': r.Alamat,
+                'Pembayaran': r.Pembayaran,
+                'Harga Beli': r['Harga Beli'] || 0,
+                'Tgl Tempo': r['Tgl Tempo'] || '',
+                'Kode': r.Kode || ''
+            }));
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Data Penjualan');
+            XLSX.writeFile(wb, `Bank_Data_Penjualan_${suffix}.xlsx`);
+            document.getElementById('downloadModal').classList.remove('show');
+        });
+
+        // ===== IMPORT EXCEL =====
+        document.getElementById('fileImport').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const wb = XLSX.read(ev.target.result, { type: 'array', cellDates: true });
+                    const sheet = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+                    let added = 0;
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (!row || row.length < 8) continue;
+                        const faktur = String(row[1] || '').trim();
+                        if (!faktur || faktur.toUpperCase().includes('OOO') || faktur.toUpperCase().includes('TOTAL'))
+                            continue;
+                        let tanggalRaw = row[0];
+                        let tanggal = '';
+                        if (tanggalRaw instanceof Date) {
+                            tanggal = tanggalRaw.toISOString().slice(0, 10);
+                        } else if (typeof tanggalRaw === 'string' && tanggalRaw.includes('-')) {
+                            tanggal = tanggalRaw.slice(0, 10);
+                        } else if (typeof tanggalRaw === 'string' && tanggalRaw.includes('/')) {
+                            const parts = tanggalRaw.split('/');
+                            if (parts.length === 3) tanggal = parts[2] + '-' + parts[1].padStart(2, '0') + '-' + parts[0]
+                                .padStart(2, '0');
+                        }
+                        if (!tanggal) continue;
+                        const jumlah = parseFloat(row[3]) || 0;
+                        const harga = parseFloat(row[5]) || 0;
+                        const disc = parseFloat(row[6]) || 0;
+                        const total = parseFloat(row[7]) || (jumlah * harga - disc);
+                        let sales = String(row[8] || '').trim();
+                        if (!sales || /^\d+$/.test(sales)) sales = 'LAINNYA';
+                        let pembayaran = String(row[11] || '').trim();
+                        if (pembayaran !== 'Cash' && pembayaran !== 'Tempo') pembayaran = 'Tempo';
+                        let hargaBeli = 0;
+                        if (row.length > 12) {
+                            const val = parseFloat(row[12]);
+                            if (!isNaN(val)) hargaBeli = val;
+                        }
+                        DATA.push({
+                            'Tanggal': tanggal,
+                            'No.Faktur': faktur,
+                            'Produk': String(row[2] || '').trim(),
+                            'Jumlah': jumlah,
+                            'Satuan': String(row[4] || '').trim(),
+                            'Harga Jual': harga,
+                            'Disc': disc,
+                            'Total': total,
+                            'Sales': sales,
+                            'Customer': String(row[9] || '').trim(),
+                            'Alamat': String(row[10] || '').trim(),
+                            'Pembayaran': pembayaran,
+                            'Harga Beli': hargaBeli,
+                            'Tgl Tempo': '',
+                            'Kode': ''
+                        });
+                        added++;
+                    }
+                    saveDataToStorage();
+                    rebuildFilterOptions();
+                    render();
+                    alert(`Berhasil menambahkan ${added} baris data baru dari file import.`);
+                } catch (err) {
+                    alert('Gagal membaca file: ' + err.message);
+                }
+                e.target.value = '';
+            };
+            reader.readAsArrayBuffer(file);
+            closeAllMenus();
+        });
+
+        // ===== THEME =====
+        const themeToggle = document.getElementById('themeToggle');
+        function applyTheme(dark) {
+            document.documentElement.classList.toggle('dark', dark);
+            themeToggle.textContent = dark ? '☀️' : '🌙';
+            try { localStorage.setItem('bdp-theme', dark ? 'dark' : 'light'); } catch (e) {}
+        }
+        themeToggle.addEventListener('click', function() {
+            applyTheme(!document.documentElement.classList.contains('dark'));
+        });
+        (function initTheme() {
+            let dark = false;
+            try {
+                const saved = localStorage.getItem('bdp-theme');
+                if (saved === 'dark') dark = true;
+                else if (saved === 'light') dark = false;
+                else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) dark = true;
+            } catch (e) {}
+            applyTheme(dark);
+        })();
+
+        // ===== INIT =====
+        rebuildFilterOptions();
+        render();
+    </script>
+</body>
+</html>

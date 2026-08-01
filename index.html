@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ringkasan — Dashboard Kerja</title>
+  <style>
+    :root {
+      --bg: #eef3f8;
+      --bg-card: #ffffff;
+      --ink: #1a2d42;
+      --muted: #5a7088;
+      --line: #d8e0ea;
+      --navy: #1B3A5C;
+      --teal: #0d9488;
+      --teal-soft: #ccfbf1;
+      --blue: #2563eb;
+      --purple: #7c3aed;
+      --purple-soft: #ede9fe;
+      --row-alt: #f0f7f6;
+      --total-bg: #e6f7f4;
+      --header-bg: #f8fafc;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+      /* warna per sales */
+      --s1: #0d9488;
+      --s2: #2563eb;
+      --s3: #7c3aed;
+      --s4: #d97706;
+      --s5: #dc2626;
+      --s6: #0891b2;
+    }
+    html.dark {
+      --bg: #0f1720;
+      --bg-card: #15202b;
+      --ink: #E5E7EB;
+      --muted: #9CA3AF;
+      --line: #2d3a4d;
+      --navy: #93c5fd;
+      --teal: #2dd4bf;
+      --teal-soft: rgba(45, 212, 191, 0.12);
+      --blue: #60a5fa;
+      --purple: #a78bfa;
+      --purple-soft: rgba(167, 139, 250, 0.15);
+      --row-alt: #1a2433;
+      --total-bg: rgba(45, 212, 191, 0.1);
+      --header-bg: #1a2433;
+      --shadow: 0 1px 3px rgba(0,0,0,0.3);
+      --s1: #2dd4bf;
+      --s2: #60a5fa;
+      --s3: #a78bfa;
+      --s4: #fbbf24;
+      --s5: #f87171;
+      --s6: #22d3ee;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 12px 12px 36px;
+      transition: background 0.25s, color 0.25s;
+    }
+    .wrap { width: 100%; max-width: none; margin: 0; }
+
+    /* ===== TOP BAR ===== */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .topbar-left h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--navy);
+      letter-spacing: -0.3px;
+    }
+    .topbar-left .sub {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-top: 1px;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12.5px;
+      color: var(--ink);
+      box-shadow: var(--shadow);
+    }
+    .pill select {
+      border: none;
+      background: transparent;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--teal);
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+    }
+    .theme-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 5px 11px;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    /* ===== STAT CARDS — tipis ===== */
+    .stat-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin: 0 4px 6px;
+    }
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 8px 12px 7px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+      min-height: 0;
+    }
+    .stat-card .lbl {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      line-height: 1.2;
+    }
+    .stat-card .lbl .unit {
+      font-size: 9px;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      opacity: 0.8;
+    }
+    .stat-card .val {
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 2px;
+      line-height: 1.15;
+    }
+    .stat-card.total .val { color: var(--teal); }
+    .stat-card.sales .val { color: var(--navy); }
+
+    /* warna sales di kartu */
+    .stat-card[data-sales="0"] .val { color: var(--s1); }
+    .stat-card[data-sales="1"] .val { color: var(--s2); }
+    .stat-card[data-sales="2"] .val { color: var(--s3); }
+    .stat-card[data-sales="3"] .val { color: var(--s4); }
+    .stat-card[data-sales="4"] .val { color: var(--s5); }
+    .stat-card[data-sales="5"] .val { color: var(--s6); }
+
+    /* ===== TWO PANELS full width ===== */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 900px) {
+      .panels { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--bg-card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .panel-head h2 {
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .panel-head h2 .bar {
+      width: 3px;
+      height: 14px;
+      border-radius: 2px;
+    }
+    .panel-fitri h2 .bar { background: var(--teal); }
+    .panel-rupa h2 .bar { background: var(--purple); }
+    .badge {
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 12px;
+      letter-spacing: 0.3px;
+    }
+    .badge-fitri { background: var(--teal-soft); color: var(--teal); }
+    .badge-rupa { background: var(--purple-soft); color: var(--purple); }
+    .panel-tools {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 0 14px 8px;
+    }
+    .panel-tools input,
+    .panel-tools select {
+      padding: 6px 9px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--ink);
+      outline: none;
+    }
+    .panel-tools input { flex: 1; min-width: 100px; }
+    .panel-tools input:focus,
+    .panel-tools select:focus { border-color: var(--teal); }
+    .table-scroll {
+      overflow: auto;
+      max-height: 380px;
+      flex: 1;
+    }
+    table.matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    table.matrix thead th {
+      position: sticky;
+      top: 0;
+      background: var(--header-bg);
+      padding: 7px 10px;
+      text-align: right;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+      z-index: 2;
+    }
+    table.matrix thead th:first-child {
+      text-align: left;
+      left: 0;
+      z-index: 3;
+    }
+    /* warna header kolom sales */
+    table.matrix thead th.col-s0 { color: var(--s1); }
+    table.matrix thead th.col-s1 { color: var(--s2); }
+    table.matrix thead th.col-s2 { color: var(--s3); }
+    table.matrix thead th.col-s3 { color: var(--s4); }
+    table.matrix thead th.col-s4 { color: var(--s5); }
+    table.matrix thead th.col-s5 { color: var(--s6); }
+    table.matrix thead th.col-total { color: var(--ink); }
+
+    table.matrix tbody td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+    }
+    table.matrix tbody td:first-child {
+      text-align: left;
+      font-weight: 500;
+      white-space: nowrap;
+      position: sticky;
+      left: 0;
+      background: var(--bg-card);
+      z-index: 1;
+    }
+    table.matrix tbody tr:nth-child(even) td { background: var(--row-alt); }
+    table.matrix tbody tr:nth-child(even) td:first-child { background: var(--row-alt); }
+    table.matrix tbody tr:hover td { background: var(--teal-soft); }
+    table.matrix tbody tr:hover td:first-child { background: var(--teal-soft); }
+
+    /* angka per sales beda warna */
+    table.matrix tbody td.col-s0 { color: var(--s1); font-weight: 600; }
+    table.matrix tbody td.col-s1 { color: var(--s2); font-weight: 600; }
+    table.matrix tbody td.col-s2 { color: var(--s3); font-weight: 600; }
+    table.matrix tbody td.col-s3 { color: var(--s4); font-weight: 600; }
+    table.matrix tbody td.col-s4 { color: var(--s5); font-weight: 600; }
+    table.matrix tbody td.col-s5 { color: var(--s6); font-weight: 600; }
+
+    table.matrix tfoot td {
+      padding: 7px 10px;
+      font-weight: 700;
+      background: var(--total-bg);
+      border-top: 2px solid var(--line);
+      text-align: right;
+      position: sticky;
+      bottom: 0;
+    }
+    table.matrix tfoot td:first-child {
+      text-align: left;
+      left: 0;
+      z-index: 1;
+    }
+    table.matrix tfoot td.col-s0 { color: var(--s1); }
+    table.matrix tfoot td.col-s1 { color: var(--s2); }
+    table.matrix tfoot td.col-s2 { color: var(--s3); }
+    table.matrix tfoot td.col-s3 { color: var(--s4); }
+    table.matrix tfoot td.col-s4 { color: var(--s5); }
+    table.matrix tfoot td.col-s5 { color: var(--s6); }
+    .dash { color: var(--muted); opacity: 0.45; font-weight: 400 !important; }
+
+    /* ===== CUSTOMER ===== */
+    .cust-section {
+      background: var(--bg-card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+    .cust-section .panel-head h2 .bar { background: var(--blue); }
+    .cust-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 0;
+    }
+    .cust-item {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+    }
+    .cust-item:hover { background: var(--row-alt); }
+    .cust-item .cname {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .cust-item .calamat {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+    .cust-item .cmeta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      margin-top: 6px;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+    .cust-item .cmeta strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .cust-item .ctags {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .cust-item .ctags span {
+      font-size: 10.5px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: var(--teal-soft);
+      color: var(--teal);
+    }
+    .empty {
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .footer-note {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Ringkasan</h1>
+        <div class="sub">Dashboard — Kerja</div>
+      </div>
+      <div class="topbar-right">
+        <div class="pill">
+          <span style="color:var(--muted);font-size:11.5px">Tanggal</span>
+          <strong id="todayLabel">—</strong>
+        </div>
+        <div class="pill">
+          <span style="color:var(--muted);font-size:11.5px">Periode</span>
+          <select id="filterBulan"></select>
+        </div>
+        <div class="pill">
+          <span class="live-dot"></span>
+          <span style="font-size:11.5px;font-weight:600;color:#16a34a">Live</span>
+        </div>
+        <a href="Data_Penjualan.html" class="pill" title="Buka Bank Data" style="text-decoration:none;font-weight:600;color:var(--navy);">📋 Bank Data</a>
+        <button type="button" class="theme-btn" id="themeToggle" title="Mode gelap/terang">🌙</button>
+      </div>
+    </div>
+
+    <!-- Kartu FITRI (tipis) -->
+    <div class="stat-section-label">Qty Fitri (Unit)</div>
+    <div class="stat-row" id="statFitri"></div>
+
+    <!-- Kartu RUPA-RUPA (tipis) -->
+    <div class="stat-section-label">Qty Rupa-rupa (Unit)</div>
+    <div class="stat-row" id="statRupa"></div>
+
+    <div class="panels">
+      <div class="panel panel-fitri">
+        <div class="panel-head">
+          <h2><span class="bar"></span> PENJUALAN FITRI</h2>
+          <span class="badge badge-fitri">PRODUK ANDALAN</span>
+        </div>
+        <div class="table-scroll">
+          <table class="matrix" id="tableFitri">
+            <thead></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel panel-rupa">
+        <div class="panel-head">
+          <h2><span class="bar"></span> RUPA RUPA</h2>
+          <span class="badge badge-rupa">SEMUA PRODUK</span>
+        </div>
+        <div class="panel-tools">
+          <input type="text" id="cariRupa" placeholder="Cari produk...">
+          <select id="pilihRupa">
+            <option value="">— Pilih Produk —</option>
+          </select>
+        </div>
+        <div class="table-scroll">
+          <table class="matrix" id="tableRupa">
+            <thead></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="cust-section">
+      <div class="panel-head">
+        <h2><span class="bar"></span> CUSTOMER ORDER BESAR</h2>
+        <span class="badge" style="background:rgba(37,99,235,0.1);color:var(--blue)">FOLLOW-UP MARKETING</span>
+      </div>
+      <div class="cust-grid" id="custGrid"></div>
+    </div>
+
+    <div class="footer-note" id="footerNote">Qty saja · bukan omzet · monitoring sales &amp; marketing</div>
+  </div>
+
+  <script>
+    const MONTH_ID = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+    const STORAGE_KEY = 'bank_data_penjualan_v2';
+
+    // Seed fallback (jika belum ada data di Bank Data)
+        const DATA_SEED = [
+      { Tanggal: "2026-03-11", Produk: "SAMBAL STICK 9 GR", Jumlah: 1, Satuan: "KRT", Sales: "RAJU", Customer: "TOKO HAMDAN", Alamat: "WONOSARI" },
+      { Tanggal: "2026-03-11", Produk: "SAMBAL REFFIL 600ML", Jumlah: 24, Satuan: "KRT", Sales: "RAJU", Customer: "TOKO HAMDAN", Alamat: "WONOSARI" },
+      { Tanggal: "2026-03-11", Produk: "BIHUN JAGUNG", Jumlah: 4, Satuan: "BAL", Sales: "RAJU", Customer: "TOKO ROHANI", Alamat: "PASAR KUTO" },
+      { Tanggal: "2026-03-11", Produk: "KRUPUK B PUTIH PEDAS", Jumlah: 1, Satuan: "BAL", Sales: "RAJU", Customer: "TOKO ROHANI", Alamat: "PASAR KUTO" },
+      { Tanggal: "2026-03-12", Produk: "KRUPUK B PUTIH PEDAS", Jumlah: 1, Satuan: "BAL", Sales: "RAJU", Customer: "TOKO ROHANI", Alamat: "PASAR KUTO" },
+      { Tanggal: "2026-03-12", Produk: "BIHUN JAGUNG", Jumlah: 4, Satuan: "BAL", Sales: "RAJU", Customer: "TOKO ROHANI", Alamat: "PASAR KUTO" },
+      { Tanggal: "2026-03-12", Produk: "KECAP GUNA JRG", Jumlah: 2, Satuan: "PCS", Sales: "RAJU", Customer: "TOKO RANTI", Alamat: "PASAR PONCOWARNO" },
+      { Tanggal: "2026-03-12", Produk: "SAMBAL CABE 500GR", Jumlah: 1, Satuan: "PCS", Sales: "RAJU", Customer: "TOKO HAMDAN", Alamat: "WONOSARI" },
+      { Tanggal: "2026-03-12", Produk: "SAMBAL REFFIL 600ML", Jumlah: 24, Satuan: "KRT", Sales: "RAJU", Customer: "TOKO HAMDAN", Alamat: "WONOSARI" },
+      { Tanggal: "2026-03-12", Produk: "SHZ KIREI 85GR", Jumlah: 12, Satuan: "PCS", Sales: "RAJU", Customer: "TOKO KOSIDAH", Alamat: "PASAR POCOWARNO" },
+      { Tanggal: "2026-03-12", Produk: "SAMBAL REFFIL 600ML", Jumlah: 10, Satuan: "KRT", Sales: "HAFID", Customer: "TOKO WARAS", Alamat: "KALITENGAH" },
+      { Tanggal: "2026-03-13", Produk: "SAMBAL REFFIL 600ML", Jumlah: 7, Satuan: "KRT", Sales: "LAINNYA", Customer: "TOKO POJOK", Alamat: "KARANGANYAR" },
+      { Tanggal: "2026-03-13", Produk: "SAMBAL REFFIL 600ML", Jumlah: 5, Satuan: "KRT", Sales: "JOSSY", Customer: "TOKO RATIH", Alamat: "PASAR KARANGANYAR" },
+      { Tanggal: "2026-03-13", Produk: "SAMBAL STICK 9 GR", Jumlah: 100, Satuan: "PAK", Sales: "HAFID", Customer: "SUMBER MAKMUR", Alamat: "BOGANGIN" },
+      { Tanggal: "2026-03-13", Produk: "BIHUN JAGUNG", Jumlah: 5, Satuan: "BAL", Sales: "HAFID", Customer: "SUMBER MAKMUR", Alamat: "BOGANGIN" },
+      { Tanggal: "2026-03-13", Produk: "SOUN BAKSO GAJAH 2 KP", Jumlah: 2, Satuan: "BAL", Sales: "HAFID", Customer: "SUMBER MAKMUR", Alamat: "BOGANGIN" },
+      { Tanggal: "2026-03-13", Produk: "MIE IKAT KECIL", Jumlah: 50, Satuan: "IKT", Sales: "HAFID", Customer: "SUMBER MAKMUR", Alamat: "BOGANGIN" },
+      { Tanggal: "2026-03-13", Produk: "KERUPUK BWG BIBIR RJW", Jumlah: 3, Satuan: "BAL", Sales: "HAFID", Customer: "SUMBER MAKMUR", Alamat: "BOGANGIN" },
+      { Tanggal: "2026-03-13", Produk: "KECAP NAS REFF 520ML", Jumlah: 3, Satuan: "PCS", Sales: "HAFID", Customer: "SUMBER MAKMUR", Alamat: "BOGANGIN" },
+      { Tanggal: "2026-03-13", Produk: "SAMBAL CABE 500GR", Jumlah: 7, Satuan: "PCS", Sales: "HAFID", Customer: "SUMBER MAKMUR", Alamat: "BOGANGIN" },
+      { Tanggal: "2026-08-01", Produk: "FITRI BOTOL 200ML", Jumlah: 11, Satuan: "KRT", Sales: "HAFID", Customer: "TOKO MAJU", Alamat: "PASAR KOTA" },
+      { Tanggal: "2026-08-01", Produk: "FITRI BOTOL 200ML", Jumlah: 17, Satuan: "KRT", Sales: "JOSSY", Customer: "TOKO BERKAH", Alamat: "PASAR BARU" },
+      { Tanggal: "2026-08-01", Produk: "FITRI BOTOL 200ML", Jumlah: 114, Satuan: "KRT", Sales: "RAJU", Customer: "TOKO SEJAHTERA", Alamat: "JL. RAYA" },
+      { Tanggal: "2026-08-01", Produk: "FITRI BOTOL 800ML", Jumlah: 5, Satuan: "KRT", Sales: "HAFID", Customer: "TOKO MAJU", Alamat: "PASAR KOTA" },
+      { Tanggal: "2026-08-01", Produk: "FITRI BOTOL 800ML", Jumlah: 9, Satuan: "KRT", Sales: "JOSSY", Customer: "TOKO BERKAH", Alamat: "PASAR BARU" },
+      { Tanggal: "2026-08-01", Produk: "FITRI BOTOL 800ML", Jumlah: 64, Satuan: "KRT", Sales: "RAJU", Customer: "TOKO SEJAHTERA", Alamat: "JL. RAYA" },
+      { Tanggal: "2026-08-01", Produk: "FITRI BOTOL 400ML", Jumlah: 17, Satuan: "KRT", Sales: "HAFID", Customer: "TOKO MAJU", Alamat: "PASAR KOTA" },
+      { Tanggal: "2026-08-01", Produk: "FITRI BOTOL 400ML", Jumlah: 1, Satuan: "KRT", Sales: "JOSSY", Customer: "TOKO BERKAH", Alamat: "PASAR BARU" },
+      { Tanggal: "2026-08-01", Produk: "FITRI BOTOL 400ML", Jumlah: 36, Satuan: "KRT", Sales: "RAJU", Customer: "TOKO SEJAHTERA", Alamat: "JL. RAYA" },
+      { Tanggal: "2026-08-01", Produk: "SAMBAL CABE 500GR", Jumlah: 312, Satuan: "PCS", Sales: "JOSSY", Customer: "TOKO RATIH", Alamat: "PASAR KARANGANYAR" },
+      { Tanggal: "2026-08-01", Produk: "SAMBAL STICK 9 GR", Jumlah: 100, Satuan: "PAK", Sales: "HAFID", Customer: "SUMBER MAKMUR", Alamat: "BOGANGIN" },
+      { Tanggal: "2026-08-01", Produk: "SAMBAL STICK 9 GR", Jumlah: 10, Satuan: "PAK", Sales: "JOSSY", Customer: "TOKO RATIH", Alamat: "PASAR KARANGANYAR" },
+      { Tanggal: "2026-08-01", Produk: "SAMBAL STICK 9 GR", Jumlah: 100, Satuan: "PAK", Sales: "RAJU", Customer: "TOKO HAMDAN", Alamat: "WONOSARI" },
+      { Tanggal: "2026-08-01", Produk: "SHZ KIREI 85GR", Jumlah: 36, Satuan: "PCS", Sales: "JOSSY", Customer: "TOKO KOSIDAH", Alamat: "PASAR POCOWARNO" },
+      { Tanggal: "2026-08-01", Produk: "SHZ SAKURA 85GR", Jumlah: 36, Satuan: "PCS", Sales: "JOSSY", Customer: "TOKO KOSIDAH", Alamat: "PASAR POCOWARNO" },
+    ];
+
+    function loadSharedData() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length) return parsed;
+        }
+      } catch (e) {}
+      return DATA_SEED.slice();
+    }
+
+    let DATA = loadSharedData();
+
+    function isFitri(nama) {
+      return (nama || '').toUpperCase().includes('FITRI');
+    }
+    function periodKey(iso) { return (iso || '').slice(0, 7); }
+    function periodLabel(key) {
+      if (!key) return 'Semua';
+      var parts = key.split('-');
+      return MONTH_ID[parseInt(parts[1], 10)] + ' ' + parts[0];
+    }
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      var p = iso.split('-');
+      return p[2] + '/' + p[1] + '/' + p[0];
+    }
+    function esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function getFiltered() {
+      var bln = document.getElementById('filterBulan').value;
+      if (!bln) return DATA.slice();
+      return DATA.filter(function(r) { return periodKey(r.Tanggal) === bln; });
+    }
+
+    function rebuildBulan() {
+      var set = {};
+      DATA.forEach(function(r) { set[periodKey(r.Tanggal)] = true; });
+      var keys = Object.keys(set).sort().reverse();
+      var sel = document.getElementById('filterBulan');
+      var cur = sel.value;
+      sel.innerHTML = '<option value="">Semua Periode</option>' +
+        keys.map(function(k) {
+          return '<option value="' + k + '">' + periodLabel(k) + '</option>';
+        }).join('');
+      if (!cur && keys.indexOf('2026-08') >= 0) sel.value = '2026-08';
+      else if (cur) sel.value = cur;
+    }
+
+    function buildMatrix(rows, onlyFitri) {
+      var salesSet = {};
+      var prodMap = {};
+      rows.forEach(function(r) {
+        var fitri = isFitri(r.Produk);
+        if (onlyFitri && !fitri) return;
+        if (!onlyFitri && fitri) return;
+        var s = r.Sales || '—';
+        var p = r.Produk || '—';
+        salesSet[s] = true;
+        if (!prodMap[p]) prodMap[p] = {};
+        prodMap[p][s] = (prodMap[p][s] || 0) + (Number(r.Jumlah) || 0);
+      });
+      var sales = Object.keys(salesSet).sort();
+      var products = Object.keys(prodMap).sort(function(a, b) {
+        var ta = 0, tb = 0, k;
+        for (k in prodMap[a]) ta += prodMap[a][k];
+        for (k in prodMap[b]) tb += prodMap[b][k];
+        return tb - ta;
+      });
+      return { sales: sales, products: products, prodMap: prodMap };
+    }
+
+    function renderMatrix(tableId, matrix, filterProd, filterText) {
+      var table = document.getElementById(tableId);
+      var thead = table.querySelector('thead');
+      var tbody = table.querySelector('tbody');
+      var tfoot = table.querySelector('tfoot');
+      var sales = matrix.sales.slice();
+      var products = matrix.products.slice();
+      var prodMap = matrix.prodMap;
+
+      if (filterText) {
+        var q = filterText.toLowerCase();
+        products = products.filter(function(p) { return p.toLowerCase().indexOf(q) >= 0; });
+      }
+      if (filterProd) {
+        products = products.filter(function(p) { return p === filterProd; });
+      }
+
+      if (!products.length || !sales.length) {
+        thead.innerHTML = '';
+        tbody.innerHTML = '<tr><td class="empty" colspan="10">Tidak ada data</td></tr>';
+        tfoot.innerHTML = '';
+        return;
+      }
+
+      thead.innerHTML = '<tr><th>PRODUK</th>' +
+        sales.map(function(s, i) {
+          return '<th class="col-s' + (i % 6) + '">' + esc(s) + '</th>';
+        }).join('') +
+        '<th class="col-total">TOTAL</th></tr>';
+
+      var colTotal = {};
+      sales.forEach(function(s) { colTotal[s] = 0; });
+      var grand = 0;
+
+      tbody.innerHTML = products.map(function(p) {
+        var rowSum = 0;
+        var cells = sales.map(function(s, i) {
+          var v = prodMap[p][s] || 0;
+          colTotal[s] += v;
+          rowSum += v;
+          if (!v) return '<td class="dash">-</td>';
+          return '<td class="col-s' + (i % 6) + '">' + v.toLocaleString('id-ID') + '</td>';
+        }).join('');
+        grand += rowSum;
+        return '<tr><td>' + esc(p) + '</td>' + cells +
+          '<td><strong>' + rowSum.toLocaleString('id-ID') + '</strong></td></tr>';
+      }).join('');
+
+      tfoot.innerHTML = '<tr><td>TOTAL</td>' +
+        sales.map(function(s, i) {
+          var v = colTotal[s];
+          return '<td class="col-s' + (i % 6) + '">' +
+            (v ? v.toLocaleString('id-ID') : '-') + '</td>';
+        }).join('') +
+        '<td>' + grand.toLocaleString('id-ID') + '</td></tr>';
+    }
+
+    function renderStatRow(elId, rows, onlyFitri, labelTotal) {
+      var bySales = {};
+      var total = 0;
+      rows.forEach(function(r) {
+        var fitri = isFitri(r.Produk);
+        if (onlyFitri && !fitri) return;
+        if (!onlyFitri && fitri) return;
+        var s = r.Sales || '—';
+        var q = Number(r.Jumlah) || 0;
+        bySales[s] = (bySales[s] || 0) + q;
+        total += q;
+      });
+      var salesSorted = Object.keys(bySales).sort(function(a, b) {
+        return bySales[b] - bySales[a];
+      });
+
+      var html = '<div class="stat-card total"><div class="lbl">' + labelTotal +
+        ' <span class="unit">Unit</span></div><div class="val">' +
+        total.toLocaleString('id-ID') + '</div></div>';
+
+      salesSorted.forEach(function(s, i) {
+        html += '<div class="stat-card sales" data-sales="' + (i % 6) + '">' +
+          '<div class="lbl">' + esc(s) + ' <span class="unit">Unit</span></div>' +
+          '<div class="val">' + bySales[s].toLocaleString('id-ID') + '</div></div>';
+      });
+      if (!salesSorted.length) {
+        html += '<div class="stat-card sales"><div class="lbl">— <span class="unit">Unit</span></div><div class="val">0</div></div>';
+      }
+      document.getElementById(elId).innerHTML = html;
+    }
+
+    function renderRupaFilter(matrix) {
+      var sel = document.getElementById('pilihRupa');
+      var cur = sel.value;
+      sel.innerHTML = '<option value="">— Pilih Produk —</option>' +
+        matrix.products.map(function(p) {
+          return '<option value="' + esc(p) + '">' + esc(p) + '</option>';
+        }).join('');
+      if (cur) sel.value = cur;
+    }
+
+    function renderCustomers(rows) {
+      var map = {};
+      rows.forEach(function(r) {
+        var c = r.Customer || '—';
+        if (!map[c]) {
+          map[c] = { alamat: r.Alamat || '', qty: 0, produk: {}, last: r.Tanggal || '', sales: {} };
+        }
+        map[c].qty += Number(r.Jumlah) || 0;
+        map[c].sales[r.Sales] = true;
+        if (r.Alamat) map[c].alamat = r.Alamat;
+        if (r.Tanggal && r.Tanggal > map[c].last) map[c].last = r.Tanggal;
+        var p = r.Produk || '—';
+        map[c].produk[p] = (map[c].produk[p] || 0) + (Number(r.Jumlah) || 0);
+      });
+      var list = Object.keys(map).map(function(name) {
+        var v = map[name];
+        var top = Object.keys(v.produk).map(function(n) {
+          return { n: n, q: v.produk[n] };
+        }).sort(function(a, b) { return b.q - a.q; }).slice(0, 3)
+          .map(function(x) { return x.n + ' · ' + x.q; });
+        return {
+          name: name,
+          alamat: v.alamat,
+          qty: v.qty,
+          sales: Object.keys(v.sales).join(', '),
+          last: v.last,
+          top: top
+        };
+      }).sort(function(a, b) { return b.qty - a.qty; }).slice(0, 8);
+
+      var el = document.getElementById('custGrid');
+      if (!list.length) {
+        el.innerHTML = '<div class="empty">Belum ada customer</div>';
+        return;
+      }
+      el.innerHTML = list.map(function(c) {
+        return '<div class="cust-item">' +
+          '<div class="cname">' + esc(c.name) + '</div>' +
+          '<div class="calamat">' + (esc(c.alamat) || '—') + '</div>' +
+          '<div class="cmeta">' +
+            '<span>Qty: <strong>' + c.qty.toLocaleString('id-ID') + '</strong></span>' +
+            '<span>Sales: <strong>' + esc(c.sales) + '</strong></span>' +
+            '<span>Terakhir: <strong>' + fmtDate(c.last) + '</strong></span>' +
+          '</div>' +
+          '<div class="ctags">' + c.top.map(function(t) {
+            return '<span>' + esc(t) + '</span>';
+          }).join('') + '</div></div>';
+      }).join('');
+    }
+
+    function renderAll() {
+      var rows = getFiltered();
+      renderStatRow('statFitri', rows, true, 'TOTAL FITRI');
+      renderStatRow('statRupa', rows, false, 'TOTAL RUPA');
+
+      var mFitri = buildMatrix(rows, true);
+      var mRupa = buildMatrix(rows, false);
+      renderMatrix('tableFitri', mFitri, '', '');
+      renderRupaFilter(mRupa);
+      var cari = document.getElementById('cariRupa').value.trim();
+      var pilih = document.getElementById('pilihRupa').value;
+      renderMatrix('tableRupa', mRupa, pilih, cari);
+      renderCustomers(rows);
+
+      var bln = document.getElementById('filterBulan').value;
+      document.getElementById('footerNote').textContent =
+        (bln ? periodLabel(bln) : 'Semua periode') +
+        ' · Qty saja (bukan omzet) · monitoring sales & follow-up marketing';
+    }
+
+    (function() {
+      var d = new Date();
+      var dd = String(d.getDate()).padStart(2, '0');
+      var mm = String(d.getMonth() + 1).padStart(2, '0');
+      document.getElementById('todayLabel').textContent = dd + '/' + mm + '/' + d.getFullYear();
+    })();
+
+    document.getElementById('filterBulan').addEventListener('change', renderAll);
+    document.getElementById('cariRupa').addEventListener('input', renderAll);
+    document.getElementById('pilihRupa').addEventListener('change', renderAll);
+
+    var themeBtn = document.getElementById('themeToggle');
+    function applyTheme(dark) {
+      document.documentElement.classList.toggle('dark', dark);
+      themeBtn.textContent = dark ? '☀️' : '🌙';
+      try { localStorage.setItem('ringkasan-theme', dark ? 'dark' : 'light'); } catch (e) {}
+    }
+    themeBtn.addEventListener('click', function() {
+      applyTheme(!document.documentElement.classList.contains('dark'));
+    });
+    (function() {
+      var dark = false;
+      try { if (localStorage.getItem('ringkasan-theme') === 'dark') dark = true; } catch (e) {}
+      applyTheme(dark);
+    })();
+
+
+    // Reload dari Bank Data saat kembali ke tab
+    window.addEventListener('focus', function() {
+      DATA = loadSharedData();
+      rebuildBulan();
+      renderAll();
+    });
+
+    rebuildBulan();
+    renderAll();
+  </script>
+</body>
+</html>
