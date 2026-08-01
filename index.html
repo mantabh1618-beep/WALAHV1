@@ -151,10 +151,6 @@
       <div class="topbar-left"><h1>Ringkasan</h1><div class="sub">Dashboard — Kerja</div></div>
       <div class="topbar-right">
         <div class="pill"><span style="color:var(--muted);font-size:11.5px">Tanggal</span><strong id="todayLabel">—</strong></div>
-        <div class="pill">
-          <span style="color:var(--muted);font-size:11.5px">Periode</span>
-          <select id="filterBulan"><option value="">Semua Periode</option></select>
-        </div>
         <div class="pill"><span class="live-dot"></span><span style="font-size:11.5px;font-weight:600;color:#16a34a">Live</span></div>
         <a href="Data_Penjualan.html" class="pill" title="Buka Bank Data" style="text-decoration:none;font-weight:600;color:var(--navy);">📋 Bank Data</a>
         <button type="button" class="theme-btn" id="themeToggle" title="Mode gelap/terang">🌙</button>
@@ -190,6 +186,77 @@
   <script>
     const MONTH_ID = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     const STORAGE_KEY = 'bank_data_penjualan_v2';
+
+    // Master produk (dari dataproduk.xls) — untuk dropdown Rupa lengkap
+    const MASTER_PRODUK_RUPA = [
+      "NS CRIPSY CRACKERS",
+      "KECAP GUNA JRG",
+      "SAMBAL STICK 9 GR",
+      "SAMBAL REFFIL 600ML",
+      "SAMBAL CABE 500GR",
+      "SHZ KIREI 85GR",
+      "SHZ CLASIC/MATSU 85GR",
+      "KRUPUK B PUTIH PEDAS",
+      "BIHUN JAGUNG",
+      "SHZ KENSHO 85GR",
+      "SOUN BAKSO GAJAH 2 KP",
+      "JELLYGAR HEMAT MELON",
+      "SHZ MYORI 85GR",
+      "SHZ HANA 85GR",
+      "KECAP BOTOL NAS 130ML",
+      "SAMBAL BOTOL MEJA 130ML",
+      "ZEN SULPHUR",
+      "ZEN ECHINACEA",
+      "ZEN JUNIPERBERRIES",
+      "ZEN SANDALWOOD",
+      "ZEN SEALSALT",
+      "ZEN TEATREE",
+      "KECAP NAS REFF 520ML",
+      "JELLYGAR STRAWBERRY",
+      "JELLYGAR LECI",
+      "JELLY ORANGE",
+      "JELLYGAR BLUEBERRY",
+      "JELLYGAR PLAIN",
+      "KERUPUK BWG BIBIR RJW",
+      "KERUPUK BWG PUTIH RJW",
+      "AGAR LUMBA HEMAT COKLAT",
+      "SHZ SAKURA 85GR",
+      "AGAR LUMBA SUPER PUTIH",
+      "AGAR LUMBA SUPER MERAH",
+      "AGAR LUMBA SUPER HIJAU",
+      "MIE IKAT KECIL",
+      "SHZ REFF MATSU 85ML",
+      "SHZ REFF KIREI 85ML",
+      "KERUPUK TERASI",
+      "KECAP REF 300ML",
+      "KECAP JERIGEN 6KG",
+      "KECAP GUNA 520 REFF",
+      "KECAP PREMIUM 70ML",
+      "KECAP CG ASIN BESAR 625ML",
+      "SAMBAL GUNA 1 KG",
+      "COCOMAXI CAIR 65GR",
+      "AGAR LUMBA SUPER COKLAT",
+      "AGAR LUMBA HEMAT PUTIH",
+      "AGAR LUMBA HEMAT MERAH",
+      "AGAR LUMBA HEMAT HIJAU",
+      "PUDDING MANGGO",
+      "PUDDING VANILA",
+      "PUDDING COCOPANDAN",
+      "PUDDING MIXBERY",
+      "PUDDING CHOCOCREAM",
+      "TERASI RENCENG 5GR",
+      "MIE 18 KP",
+      "BOTOL 600ML",
+      "KERUPUK UDANG RJW",
+      "NS CRIPSY LEMON",
+      "MARGARINE FORVITA",
+      "WOSHI2 GREAN TEA 72X75ML",
+      "ZEN REFF SANDALWOOD",
+      "ZEN REFF JUNIPERBERIS",
+      "ZEN REFF SEASALT",
+      "ZEN REFF TEATREE"
+    ];
+
 
     const DATA_SEED = [
       { Tanggal: "2026-03-11", Produk: "SAMBAL STICK 9 GR", Jumlah: 1, Satuan: "KRT", Sales: "RAJU", Customer: "TOKO HAMDAN", Alamat: "WONOSARI" },
@@ -259,18 +326,16 @@
     }
 
     function getFiltered() {
-      var sel = document.getElementById('filterBulan');
-      var bln = sel ? sel.value : '';
+      var bln = document.getElementById('filterBulan').value;
       if (!bln) return DATA.slice();
       return DATA.filter(function(r) { return periodKey(r.Tanggal) === bln; });
     }
 
     function rebuildBulan() {
-      var sel = document.getElementById('filterBulan');
-      if (!sel) return;
       var set = {};
       DATA.forEach(function(r) { set[periodKey(r.Tanggal)] = true; });
       var keys = Object.keys(set).sort().reverse();
+      var sel = document.getElementById('filterBulan');
       var cur = sel.value;
       sel.innerHTML = '<option value="">Semua Periode</option>' +
         keys.map(function(k) { return '<option value="' + k + '">' + periodLabel(k) + '</option>'; }).join('');
@@ -315,6 +380,11 @@
       }
       if (filterProd) {
         products = products.filter(function(p) { return p === filterProd; });
+        // Jika produk dipilih dari master tapi belum ada transaksi → tampilkan baris 0
+        if (!products.length && filterProd) {
+          products = [filterProd];
+          if (!prodMap[filterProd]) prodMap[filterProd] = {};
+        }
       }
 
       if (!products.length || !sales.length) {
@@ -383,8 +453,15 @@
     function renderRupaFilter(matrix) {
       var sel = document.getElementById('pilihRupa');
       var cur = sel.value;
+      // Gabungkan master + produk yang ada di data (unik, urut abjad)
+      var set = {};
+      MASTER_PRODUK_RUPA.forEach(function(p) { set[p] = true; });
+      (matrix.products || []).forEach(function(p) { set[p] = true; });
+      var all = Object.keys(set).sort(function(a, b) {
+        return a.localeCompare(b, 'id');
+      });
       sel.innerHTML = '<option value="">— Pilih Produk —</option>' +
-        matrix.products.map(function(p) { return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('');
+        all.map(function(p) { return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('');
       if (cur) sel.value = cur;
     }
 
@@ -444,8 +521,7 @@
       renderMatrix('tableRupa', mRupa, pilih, cari);
       renderCustomers(rows);
 
-      var selBulan = document.getElementById('filterBulan');
-      var bln = selBulan ? selBulan.value : '';
+      var bln = document.getElementById('filterBulan').value;
       document.getElementById('footerNote').textContent =
         (bln ? periodLabel(bln) : 'Semua periode') +
         ' · Qty saja (bukan omzet) · monitoring sales & follow-up marketing';
@@ -458,8 +534,7 @@
       document.getElementById('todayLabel').textContent = dd + '/' + mm + '/' + d.getFullYear();
     })();
 
-    var filterBulanEl = document.getElementById('filterBulan');
-    if (filterBulanEl) filterBulanEl.addEventListener('change', renderAll);
+    document.getElementById('filterBulan').addEventListener('change', renderAll);
     document.getElementById('cariRupa').addEventListener('input', renderAll);
     document.getElementById('pilihRupa').addEventListener('change', renderAll);
 
